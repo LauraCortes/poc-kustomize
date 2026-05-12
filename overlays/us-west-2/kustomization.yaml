@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+labels:
+  - pairs:
+      platform.nequi.com/region: us-west-2
+      platform.nequi.com/role: dr-passive
+    includeSelectors: false
+
+patches:
+  # Patch 1: valores regionales en ConfigMap
+  - path: patches/region-patch.yaml
+    target:
+      kind: ConfigMap
+      name: platform-config
+
+  # Patch 2: sizing reducido para DR pasivo en Deployment
+  - target:
+      kind: Deployment
+      name: platform-controller
+    path: patches/sizing-patch.yaml
