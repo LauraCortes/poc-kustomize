@@ -1,0 +1,50 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: poc-platform-multi-region
+  namespace: argocd
+spec:
+  goTemplate: true
+
+  generators:
+    - list:
+        elements:
+          # Elemento 1: cluster primario (in-cluster)
+          - region: us-east-1
+            clusterServer: https://kubernetes.default.svc
+            role: primary
+
+          # Elemento 2: cluster DR — usar la IP obtenida en sección 11.1
+          - region: us-west-2
+            clusterServer: https://dr-control-plane:6443   # Reemplazar con $DR_IP real
+            role: dr-passive
+
+  template:
+    metadata:
+      name: "poc-platform-{{ .region }}"
+      labels:
+        platform.nequi.com/region: "{{ .region }}"
+        platform.nequi.com/role: "{{ .role }}"
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/<TU_USUARIO>/poc-kustomize-nequi  # Reemplazar
+        targetRevision: main
+        path: "overlays/{{ .region }}"    # Selecciona el overlay correcto por región
+      destination:
+        server: "{{ .clusterServer }}"
+        namespace: platform-system
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+          - ApplyOutOfSyncOnly=true
+        retry:
+          limit: 3
+          backoff:
+            duration: "10s"
+            factor: 2
+            maxDuration: "1m"
