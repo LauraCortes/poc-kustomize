@@ -28,7 +28,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: https://github.com/<TU_USUARIO>/poc-kustomize-nequi  # Reemplazar
+        repoURL: https://github.com/LauraCortes/poc-kustomize 
         targetRevision: main
         path: "overlays/{{ .region }}"    # Selecciona el overlay correcto por región
       destination:
